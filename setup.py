@@ -2,20 +2,20 @@
 from setuptools import setup
 from setuptools import find_packages
 
-import wordpress2zinnia
+import zinnia_wordpress
 
 setup(
     name='wordpress2zinnia',
-    version=wordpress2zinnia.__version__,
+    version=zinnia_wordpress.__version__,
 
     description='Import your WordPress blog into Zinnia',
     long_description=open('README.rst').read(),
 
     keywords='django, zinnia, wordpress',
 
-    author=wordpress2zinnia.__author__,
-    author_email=wordpress2zinnia.__email__,
-    url=wordpress2zinnia.__url__,
+    author=zinnia_wordpress.__author__,
+    author_email=zinnia_wordpress.__email__,
+    url=zinnia_wordpress.__url__,
 
     packages=find_packages(exclude=['demo_zinnia_wordpress']),
     classifiers=[
@@ -29,7 +29,7 @@ setup(
         'License :: OSI Approved :: BSD License',
         'Topic :: Software Development :: Libraries :: Python Modules'],
 
-    license=wordpress2zinnia.__license__,
+    license=zinnia_wordpress.__license__,
     include_package_data=True,
     zip_safe=False
 )
