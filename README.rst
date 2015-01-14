@@ -1,8 +1,8 @@
 ===================
-Wordpress to Zinnia
+WordPress to Zinnia
 ===================
 
-Wordpress2zinnia is package allowing you to migrate from Wordpress to
+Wordpress2zinnia is package allowing you to migrate from WordPress to
 Zinnia.
 
 Installation
