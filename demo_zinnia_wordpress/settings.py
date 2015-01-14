@@ -63,7 +63,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
 )
 
-ROOT_URLCONF = 'demo_zinnia_wymeditor.urls'
+ROOT_URLCONF = 'demo_zinnia_wordpress.urls'
 
 TEMPLATE_CONTEXT_PROCESSORS = (
     'django.contrib.auth.context_processors.auth',
