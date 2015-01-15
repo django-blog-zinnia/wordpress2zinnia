@@ -1,4 +1,4 @@
-"""Setup script of wodpress2zinnia"""
+"""Setup script of wordpress2zinnia"""
 from setuptools import setup
 from setuptools import find_packages
 
