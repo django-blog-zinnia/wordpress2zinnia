@@ -285,7 +285,7 @@ class Command(LabelCommand):
         wich is always in Wordpress $post->post_date.
         """
         creation_date = datetime.strptime(
-            item_node.find('{%s}post_date_gmt' % WP_NS).text,
+            item_node.find('{%s}post_date' % WP_NS).text,
             '%Y-%m-%d %H:%M:%S')
         if settings.USE_TZ:
             creation_date = timezone.make_aware(
