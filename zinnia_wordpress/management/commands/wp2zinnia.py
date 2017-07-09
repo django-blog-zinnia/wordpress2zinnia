@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """WordPress to Zinnia command module"""
 import os
 import sys
@@ -22,7 +23,7 @@ from django.utils.encoding import smart_str
 from django.contrib.sites.models import Site
 from django.template.defaultfilters import slugify
 from django.core.management.base import CommandError
-from django.core.management.base import LabelCommand
+from django.core.management.base import BaseCommand
 from django.core.files.temp import NamedTemporaryFile
 
 import django_comments as comments
@@ -42,7 +43,7 @@ from zinnia.signals import disconnect_discussion_signals
 WP_NS = 'http://wordpress.org/export/%s/'
 
 
-class Command(LabelCommand):
+class Command(BaseCommand):
     """
     Command object for importing a WordPress blog
     into Zinnia via a WordPress eXtended RSS (WXR) file.
@@ -50,13 +51,6 @@ class Command(LabelCommand):
     help = 'Import a Wordpress blog into Zinnia.'
     label = 'WXR file'
     args = 'wordpress.xml'
-
-    option_list = LabelCommand.option_list + (
-        make_option('--noautoexcerpt', action='store_false',
-                    dest='auto_excerpt', default=True,
-                    help='Do NOT generate an excerpt if not present.'),
-        make_option('--author', dest='author', default='',
-                    help='All imported entries belong to specified author'))
 
     SITE = Site.objects.get_current()
     REVERSE_STATUS = {'pending': DRAFT,
@@ -68,26 +62,26 @@ class Command(LabelCommand):
                       'trash': HIDDEN,
                       'private': PUBLISHED}
 
-    def __init__(self):
-        """
-        Init the Command and add custom styles.
-        """
-        super(Command, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(Command, self).__init__(*args, **kwargs)
         self.style.TITLE = self.style.SQL_FIELD
         self.style.STEP = self.style.SQL_COLTYPE
         self.style.ITEM = self.style.HTTP_INFO
         disconnect_entry_signals()
         disconnect_discussion_signals()
 
-    def write_out(self, message, verbosity_level=1):
-        """
-        Convenient method for outputing.
-        """
-        if self.verbosity and self.verbosity >= verbosity_level:
-            sys.stdout.write(smart_str(message))
-            sys.stdout.flush()
+    def add_arguments(self, parser):
+        parser.add_argument('--noautoexcerpt', action='store_false',
+                    dest='auto_excerpt', default=True,
+                    help='Do NOT generate an excerpt if not present.')
 
-    def handle_label(self, wxr_file, **options):
+        parser.add_argument('--author', dest='author', default='',
+                    help='All imported entries belong to specified author')
+
+        parser.add_argument('--wxr_file', dest='wxr_file', default='',
+                            help='WP file')
+
+    def handle(self, *args, **options):
         global WP_NS
         self.verbosity = int(options.get('verbosity', 1))
         self.auto_excerpt = options.get('auto_excerpt', True)
@@ -102,7 +96,7 @@ class Command(LabelCommand):
         self.write_out(self.style.TITLE(
             'Starting migration from Wordpress to Zinnia %s:\n' % __version__))
 
-        tree = ET.parse(wxr_file)
+        tree = ET.parse(options.get('wxr_file'))
         WP_NS = WP_NS % self.guess_wxr_version(tree)
 
         self.authors = self.import_authors(tree)
@@ -113,6 +107,14 @@ class Command(LabelCommand):
         self.import_tags(tree.findall('channel/{%s}tag' % WP_NS))
 
         self.import_entries(tree.findall('channel/item'))
+
+    def write_out(self, message, verbosity_level=1):
+        """
+        Convenient method for outputing.
+        """
+        if self.verbosity and self.verbosity >= verbosity_level:
+            sys.stdout.write(smart_str(message))
+            sys.stdout.flush()
 
     def guess_wxr_version(self, tree):
         """
@@ -284,9 +286,15 @@ class Command(LabelCommand):
         start_publication and creation_date will use the same value,
         wich is always in Wordpress $post->post_date.
         """
-        creation_date = datetime.strptime(
-            item_node.find('{%s}post_date' % WP_NS).text,
-            '%Y-%m-%d %H:%M:%S')
+        try:
+            creation_date = datetime.strptime(
+                item_node.find('{%s}post_date_gmt' % WP_NS).text,
+                '%Y-%m-%d %H:%M:%S')
+        except ValueError as error:
+            print 'Import entry error: {}'.format(error)
+
+            creation_date = datetime.now()
+
         if settings.USE_TZ:
             creation_date = timezone.make_aware(
                 creation_date, pytz.timezone('GMT'))
@@ -328,11 +336,14 @@ class Command(LabelCommand):
             slug=slug, creation_date=creation_date,
             defaults=entry_dict)
         if created:
-            entry.categories.add(*self.get_entry_categories(
-                item_node.findall('category')))
-            entry.authors.add(self.authors[item_node.find(
-                '{http://purl.org/dc/elements/1.1/}creator').text])
-            entry.sites.add(self.SITE)
+            try:
+                entry.categories.add(*self.get_entry_categories(
+                    item_node.findall('category')))
+                entry.authors.add(self.authors[item_node.find(
+                    '{http://purl.org/dc/elements/1.1/}creator').text])
+                entry.sites.add(self.SITE)
+            except KeyError as error:
+                print 'Import entry error: {}'.format(error)
 
         return entry, created
 
