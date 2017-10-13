@@ -71,6 +71,7 @@ class Command(LabelCommand):
         disconnect_discussion_signals()
 
     def add_arguments(self, parser):
+        super(Command, self).add_arguments(parser)
         parser.add_argument(
             '--noautoexcerpt', action='store_false',
             dest='auto_excerpt', default=True,
