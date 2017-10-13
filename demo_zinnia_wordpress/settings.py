@@ -1,10 +1,9 @@
 """Settings for the demo"""
 import os
 
-gettext = lambda s: s
+gettext = lambda s: s  # noqa
 
 DEBUG = True
-TEMPLATE_DEBUG = DEBUG
 
 DATABASES = {'default':
              {'ENGINE': 'django.db.backends.sqlite3',
@@ -54,24 +53,34 @@ LANGUAGES = (
     ('zh_CN', gettext('Simplified Chinese')),
 )
 
-MIDDLEWARE_CLASSES = (
-    'django.middleware.common.CommonMiddleware',
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-)
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
 
 ROOT_URLCONF = 'demo_zinnia_wordpress.urls'
 
-TEMPLATE_CONTEXT_PROCESSORS = (
-    'django.contrib.auth.context_processors.auth',
-    'django.core.context_processors.i18n',
-    'django.core.context_processors.request',
-    'django.contrib.messages.context_processors.messages',
-    'zinnia.context_processors.version',
-)
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.contrib.auth.context_processors.auth',
+                'django.template.context_processors.i18n',
+                'django.template.context_processors.request',
+                'django.contrib.messages.context_processors.messages',
+                'zinnia.context_processors.version',
+            ]
+        }
+    }
+]
 
 INSTALLED_APPS = (
     'django.contrib.auth',
