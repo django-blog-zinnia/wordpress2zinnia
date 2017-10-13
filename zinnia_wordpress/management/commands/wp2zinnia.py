@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """WordPress to Zinnia command module"""
 import os
 import sys
@@ -23,7 +22,7 @@ from django.utils.encoding import smart_str
 from django.contrib.sites.models import Site
 from django.template.defaultfilters import slugify
 from django.core.management.base import CommandError
-from django.core.management.base import BaseCommand
+from django.core.management.base import LabelCommand
 from django.core.files.temp import NamedTemporaryFile
 
 import django_comments as comments
@@ -43,7 +42,7 @@ from zinnia.signals import disconnect_discussion_signals
 WP_NS = 'http://wordpress.org/export/%s/'
 
 
-class Command(BaseCommand):
+class Command(LabelCommand):
     """
     Command object for importing a WordPress blog
     into Zinnia via a WordPress eXtended RSS (WXR) file.
@@ -78,10 +77,7 @@ class Command(BaseCommand):
         parser.add_argument('--author', dest='author', default='',
                     help='All imported entries belong to specified author')
 
-        parser.add_argument('--wxr_file', dest='wxr_file', default='',
-                            help='WP file')
-
-    def handle(self, *args, **options):
+    def handle_label(self, wxr_file, **options):
         global WP_NS
         self.verbosity = int(options.get('verbosity', 1))
         self.auto_excerpt = options.get('auto_excerpt', True)
@@ -96,7 +92,7 @@ class Command(BaseCommand):
         self.write_out(self.style.TITLE(
             'Starting migration from Wordpress to Zinnia %s:\n' % __version__))
 
-        tree = ET.parse(options.get('wxr_file'))
+        tree = ET.parse(wxr_file)
         WP_NS = WP_NS % self.guess_wxr_version(tree)
 
         self.authors = self.import_authors(tree)
