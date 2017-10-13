@@ -1,43 +1,44 @@
 """WordPress to Zinnia command module"""
 import os
 import sys
-import pytz
 
 from datetime import datetime
-from optparse import make_option
-from xml.etree import ElementTree as ET
+from xml.etree import ElementTree
 try:
     from urllib.request import urlopen
 except ImportError:  # Python 2
     from urllib2 import urlopen
 
 from django.conf import settings
-from django.utils import timezone
-from django.core.files import File
-from django.utils.text import Truncator
-from django.utils.html import strip_tags
-from django.utils.six.moves import input
-from django.db.utils import IntegrityError
-from django.utils.encoding import smart_str
 from django.contrib.sites.models import Site
-from django.template.defaultfilters import slugify
+from django.core.files import File
+from django.core.files.temp import NamedTemporaryFile
 from django.core.management.base import CommandError
 from django.core.management.base import LabelCommand
-from django.core.files.temp import NamedTemporaryFile
+from django.db.utils import IntegrityError
+from django.template.defaultfilters import slugify
+from django.utils import timezone
+from django.utils.encoding import smart_str
+from django.utils.html import strip_tags
+from django.utils.six.moves import input
+from django.utils.text import Truncator
 
 import django_comments as comments
+
+import pytz
 
 from tagging.models import Tag
 
 from zinnia import __version__
-from zinnia.models.entry import Entry
+from zinnia.flags import PINGBACK
+from zinnia.flags import TRACKBACK
+from zinnia.flags import get_user_flagger
+from zinnia.managers import DRAFT, HIDDEN, PUBLISHED
 from zinnia.models.author import Author
 from zinnia.models.category import Category
-from zinnia.flags import get_user_flagger
-from zinnia.flags import PINGBACK, TRACKBACK
-from zinnia.managers import DRAFT, HIDDEN, PUBLISHED
-from zinnia.signals import disconnect_entry_signals
+from zinnia.models.entry import Entry
 from zinnia.signals import disconnect_discussion_signals
+from zinnia.signals import disconnect_entry_signals
 
 WP_NS = 'http://wordpress.org/export/%s/'
 
@@ -70,12 +71,16 @@ class Command(LabelCommand):
         disconnect_discussion_signals()
 
     def add_arguments(self, parser):
-        parser.add_argument('--noautoexcerpt', action='store_false',
-                    dest='auto_excerpt', default=True,
-                    help='Do NOT generate an excerpt if not present.')
+        parser.add_argument(
+            '--noautoexcerpt', action='store_false',
+            dest='auto_excerpt', default=True,
+            help='Do NOT generate an excerpt if not present.'
+        )
 
-        parser.add_argument('--author', dest='author', default='',
-                    help='All imported entries belong to specified author')
+        parser.add_argument(
+            '--author', dest='author', default='',
+            help='All imported entries belong to specified author'
+        )
 
     def handle_label(self, wxr_file, **options):
         global WP_NS
@@ -92,7 +97,7 @@ class Command(LabelCommand):
         self.write_out(self.style.TITLE(
             'Starting migration from Wordpress to Zinnia %s:\n' % __version__))
 
-        tree = ET.parse(wxr_file)
+        tree = ElementTree.parse(wxr_file)
         WP_NS = WP_NS % self.guess_wxr_version(tree)
 
         self.authors = self.import_authors(tree)

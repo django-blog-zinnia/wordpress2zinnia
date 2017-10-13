@@ -1,16 +1,16 @@
 """Zinnia to WordPress command module"""
 from django.conf import settings
-from django.utils.encoding import smart_str
 from django.contrib.sites.models import Site
-from django.template.loader import render_to_string
 from django.core.management.base import NoArgsCommand
+from django.template.loader import render_to_string
+from django.utils.encoding import smart_str
 
 from tagging.models import Tag
 
 from zinnia import __version__
-from zinnia.settings import PROTOCOL
-from zinnia.models.entry import Entry
 from zinnia.models.category import Category
+from zinnia.models.entry import Entry
+from zinnia.settings import PROTOCOL
 
 
 class Command(NoArgsCommand):
